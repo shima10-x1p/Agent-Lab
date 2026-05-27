@@ -19,7 +19,7 @@ applyTo: '**/*.py'
 - Use types from `typing` when needed, such as `Any`, `Callable`, `Iterable`, `Protocol`, or `TypedDict`.
 - Avoid overly broad types when a more precise type is practical.
 
-## Docstrings
+## Docstrings <MUST>
 
 - Write docstrings for public modules, classes, functions, and methods.
 - Use Google Style docstrings.
