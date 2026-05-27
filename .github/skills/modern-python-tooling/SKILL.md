@@ -1,18 +1,19 @@
 ---
 name: modern-python-tooling
-description: "Use when: working on modern Python projects, choosing or changing package management, virtual environments, dependency workflows, linting, formatting, type checking, uv, Ruff, ty, pyproject.toml, uv.lock, dependency-groups, or Python tool execution. Prefer uv and Ruff for new projects, consider ty for new type-checking setups, and preserve existing project conventions unless migration is requested."
+description: "Use when: working on modern Python projects, choosing or changing package management, virtual environments, dependency workflows, linting, formatting, type checking, uv, Ruff, ty, pyproject.toml, uv.lock, dependency-groups, or Python tool execution. For existing projects, preserve configured conventions unless migration is requested. For new or unconfigured concerns, prefer uv and Ruff, and consider ty for type checking."
 argument-hint: "Python task or tooling question"
 ---
 
 # Modern Python Tooling
 
-Use this skill to work on Python projects with a modern, low-churn toolchain. The goal is not to evangelize tools blindly; it is to avoid outdated assumptions such as defaulting to `pip install`, hand-written virtual environments, or a `black` + `isort` + `flake8` stack when the project is already using—or would clearly benefit from—`uv`, Ruff, and optionally ty.
+Use this skill to work on Python projects with a modern, low-churn toolchain. The goal is not to evangelize tools blindly; it is to avoid outdated assumptions such as defaulting to `pip install`, hand-written virtual environments, or a `black` + `isort` + `flake8` stack when the project already has a configured toolchain. Only suggest migration when the user explicitly requests it; otherwise preserve the existing stack regardless of perceived benefit.
 
 ## References
 
 - Use [commands](./references/commands.md) for uv, Ruff, and ty command examples.
 - Use [Ruff templates](./references/ruff-templates.md) when adding or reviewing Ruff configuration.
 - Use [ty templates](./references/ty-templates.md) when adding or reviewing ty configuration.
+- If reference files are not accessible, use these inline defaults: `uv run pytest`, `uv run ruff check .`, `uv run ruff format .`, `uv run ty check`, `uv add <pkg>`, `uv add --group dev <pkg>`, and `uvx <tool>` for one-off tools.
 
 ## Core Principles
 
@@ -24,7 +25,7 @@ Use this skill to work on Python projects with a modern, low-churn toolchain. Th
 
 ## Project Detection
 
-Before changing dependencies, Python versions, linting, formatting, type checking, or editor integration:
+Before changing dependencies, Python versions, linting, formatting, type checking, or editor integration, inspect the relevant project files for that concern:
 
 1. Inspect project files when present:
 	- `pyproject.toml`
@@ -38,6 +39,8 @@ Before changing dependencies, Python versions, linting, formatting, type checkin
 2. Identify the active tools from configuration and lock files.
 3. Follow existing conventions first.
 4. Do not migrate package managers, linters, formatters, or type checkers unless the user asks.
+5. If multiple package managers, formatters, linters, or type checkers are configured simultaneously, ask the user which is authoritative before making changes. Do not assume based on file age or completeness.
+6. If no tool is configured for the requested concern, propose the modern default (`uv` for dependencies/environments, Ruff for linting/formatting, ty for type checking) and ask the user to confirm before installing or configuring it.
 
 ## Package and Environment Management with uv
 
@@ -54,6 +57,7 @@ In uv-managed projects:
 - Use `uv run` for project-local commands such as tests, linters, formatters, scripts, and type checkers.
 - Never edit `uv.lock` manually. Let `uv add`, `uv remove`, `uv lock`, `uv sync`, or `uv run` update it.
 - Do not manually modify `.venv/` or install project dependencies into it with `uv pip install`; use `uv add` for project dependencies.
+- If a uv command fails, surface the full error to the user and do not silently fall back to `pip` or manual virtual environment operations.
 
 ### New Projects
 
@@ -66,11 +70,16 @@ Recommended defaults:
 - Commit `uv.lock` for reproducible installs.
 - Do not commit `.venv/`.
 
+### Single-File Scripts
+
+For single-file scripts, prefer PEP 723 inline metadata with `uv run script.py`; do not create a full project structure unless the user asks for a project.
+
 ### Running Tools
 
 - Use `uv run <command>` when the tool needs the project environment or pinned project dependencies, such as `pytest`, Ruff configured as a project dependency, or type checkers.
 - Use `uvx <tool>` only for one-off tools that do not need the project environment.
 - Prefer `uv run ty check` over `uvx ty check` inside uv-managed projects when type checking should see installed project dependencies.
+- Common forms: `uv run pytest`, `uv run ruff check .`, `uv run ruff format .`, `uv run ty check`, `uv add <pkg>`, `uv add --group dev <pkg>`, `uvx <tool>`.
 - See [commands](./references/commands.md) for common command forms.
 
 ### Dependency Updates
@@ -84,14 +93,14 @@ Recommended defaults:
 
 ### When Ruff Is Present
 
-Treat Ruff as present when configuration exists in `pyproject.toml`, `ruff.toml`, `.ruff.toml`, dependencies, CI, pre-commit hooks, or documentation.
+Treat Ruff as present when configuration exists in `pyproject.toml`, `ruff.toml`, `.ruff.toml`, dependencies, CI, pre-commit hooks, or project documentation that prescribes Ruff as the lint/format tool, such as `CONTRIBUTING.md` instructions.
 
 In Ruff projects:
 
 - Prefer Ruff for linting, import sorting, and formatting.
 - Do not introduce Black, isort, Flake8, or Pylint unless the project already uses them or the user asks.
 - Use `ruff check` for linting.
-- Use `ruff check --fix` only when automatic lint fixes are appropriate for the task.
+- Use `ruff check --fix` only when the user explicitly requests fixes, or when the task is specifically to resolve lint errors in the files being modified.
 - Use `ruff format` for formatting.
 - Remember that Ruff formatting does not sort imports by itself; import sorting requires the `I` rules through `ruff check --select I --fix` or the project's configured lint rules.
 
@@ -217,7 +226,7 @@ Respect existing `tool.uv.dev-dependencies` in older uv projects rather than for
 
 ## Validation Workflow
 
-Choose the smallest useful validation set for the change.
+Choose validation based on what changed: run Ruff lint on touched Python files; run Ruff format checks when formatting or style changed; run ty only if types, imports, public interfaces, or type-checker configuration changed; run tests only if logic, behavior, dependencies, or test files changed.
 
 For uv + Ruff + ty projects, a typical validation sequence is:
 
@@ -248,10 +257,12 @@ If the user asks to modernize tooling:
 
 ## Completion Checklist
 
-Before finishing a Python tooling task:
+Before finishing a Python tooling task that touches dependencies or tool configuration:
 
 - Confirm the project toolchain was detected correctly.
 - Confirm no lockfile or virtual environment was edited manually.
 - Confirm validation commands used the project-preferred runner, especially `uv run` in uv-managed projects.
 - Confirm the diff does not include unrelated formatting, lint fixes, dependency upgrades, or migrations.
 - If ty was introduced or recommended, mention that it is beta and explain why it is appropriate.
+
+For pure code changes, only confirm that no unrelated formatting, lint fixes, dependency changes, or tooling migrations were included.
