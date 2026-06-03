@@ -1,0 +1,349 @@
+openapi: 3.1.0
+info:
+  title: ToDo API
+  version: 1.0.0
+  description: |
+    ToDoを管理するためのシンプルなAPIです。
+    認証認可は不要で、ToDoの取得、作成、更新、削除を行えます。
+servers:
+  - url: http://localhost:3000
+    description: ローカル開発環境
+tags:
+  - name: Todos
+    description: ToDoの操作
+paths:
+  /todos:
+    get:
+      tags:
+        - Todos
+      summary: ToDo一覧を取得する
+      description: 登録されているToDoの一覧を取得します。クエリパラメータで完了状態による絞り込みやページングができます。
+      operationId: listTodos
+      parameters:
+        - name: completed
+          in: query
+          required: false
+          description: 完了状態で絞り込みます。指定しない場合はすべてのToDoを返します。
+          schema:
+            type: boolean
+        - name: limit
+          in: query
+          required: false
+          description: 取得する件数の上限です。
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          required: false
+          description: 取得開始位置です。
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        "200":
+          description: ToDo一覧を正常に取得しました。
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - items
+                  - limit
+                  - offset
+                  - total
+                properties:
+                  items:
+                    type: array
+                    description: ToDoの一覧です。
+                    items:
+                      $ref: "#/components/schemas/Todo"
+                  limit:
+                    type: integer
+                    description: 取得件数の上限です。
+                    example: 20
+                  offset:
+                    type: integer
+                    description: 取得開始位置です。
+                    example: 0
+                  total:
+                    type: integer
+                    description: 条件に一致するToDoの総件数です。
+                    example: 1
+              examples:
+                default:
+                  summary: ToDo一覧の例
+                  value:
+                    items:
+                      - id: "todo_001"
+                        title: "買い物に行く"
+                        description: "牛乳と卵を買う"
+                        completed: false
+                        dueDate: "2026-06-10"
+                        createdAt: "2026-06-03T09:00:00Z"
+                        updatedAt: "2026-06-03T09:00:00Z"
+                    limit: 20
+                    offset: 0
+                    total: 1
+        "400":
+          $ref: "#/components/responses/BadRequest"
+    post:
+      tags:
+        - Todos
+      summary: ToDoを作成する
+      description: 新しいToDoを作成します。作成時の完了状態は未完了として扱います。
+      operationId: createTodo
+      requestBody:
+        required: true
+        description: 作成するToDoの内容です。
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTodoRequest"
+            examples:
+              default:
+                summary: ToDo作成リクエストの例
+                value:
+                  title: "買い物に行く"
+                  description: "牛乳と卵を買う"
+                  dueDate: "2026-06-10"
+      responses:
+        "201":
+          description: ToDoを正常に作成しました。
+          headers:
+            Location:
+              description: 作成されたToDoのURLです。
+              schema:
+                type: string
+                example: /todos/todo_001
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Todo"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /todos/{todoId}:
+    parameters:
+      - name: todoId
+        in: path
+        required: true
+        description: ToDoを識別するIDです。
+        schema:
+          type: string
+        example: "todo_001"
+    get:
+      tags:
+        - Todos
+      summary: ToDoを取得する
+      description: 指定したIDのToDoを1件取得します。
+      operationId: getTodo
+      responses:
+        "200":
+          description: ToDoを正常に取得しました。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Todo"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags:
+        - Todos
+      summary: ToDoを更新する
+      description: 指定したIDのToDoを更新します。リクエストに含まれる項目でToDo全体を置き換えます。
+      operationId: updateTodo
+      requestBody:
+        required: true
+        description: 更新後のToDoの内容です。
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTodoRequest"
+            examples:
+              default:
+                summary: ToDo更新リクエストの例
+                value:
+                  title: "買い物に行く"
+                  description: "牛乳、卵、パンを買う"
+                  completed: true
+                  dueDate: "2026-06-10"
+      responses:
+        "200":
+          description: ToDoを正常に更新しました。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Todo"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags:
+        - Todos
+      summary: ToDoを削除する
+      description: 指定したIDのToDoを削除します。
+      operationId: deleteTodo
+      responses:
+        "204":
+          description: ToDoを正常に削除しました。レスポンスボディはありません。
+        "404":
+          $ref: "#/components/responses/NotFound"
+components:
+  schemas:
+    Todo:
+      type: object
+      description: ToDoを表すオブジェクトです。
+      required:
+        - id
+        - title
+        - completed
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          description: ToDoを識別するIDです。
+          example: "todo_001"
+        title:
+          type: string
+          description: ToDoのタイトルです。
+          minLength: 1
+          maxLength: 100
+          example: "買い物に行く"
+        description:
+          type: string
+          description: ToDoの詳細説明です。
+          maxLength: 1000
+          example: "牛乳と卵を買う"
+        completed:
+          type: boolean
+          description: ToDoが完了しているかどうかを表します。
+          example: false
+        dueDate:
+          type: string
+          format: date
+          description: ToDoの期限日です。
+          example: "2026-06-10"
+        createdAt:
+          type: string
+          format: date-time
+          description: ToDoの作成日時です。
+          example: "2026-06-03T09:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: ToDoの更新日時です。
+          example: "2026-06-03T09:00:00Z"
+    CreateTodoRequest:
+      type: object
+      description: ToDo作成時のリクエストです。
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          description: ToDoのタイトルです。
+          minLength: 1
+          maxLength: 100
+          example: "買い物に行く"
+        description:
+          type: string
+          description: ToDoの詳細説明です。
+          maxLength: 1000
+          example: "牛乳と卵を買う"
+        dueDate:
+          type: string
+          format: date
+          description: ToDoの期限日です。
+          example: "2026-06-10"
+    UpdateTodoRequest:
+      type: object
+      description: ToDo更新時のリクエストです。
+      required:
+        - title
+        - completed
+      properties:
+        title:
+          type: string
+          description: ToDoのタイトルです。
+          minLength: 1
+          maxLength: 100
+          example: "買い物に行く"
+        description:
+          type: string
+          description: ToDoの詳細説明です。
+          maxLength: 1000
+          example: "牛乳、卵、パンを買う"
+        completed:
+          type: boolean
+          description: ToDoが完了しているかどうかを表します。
+          example: true
+        dueDate:
+          type: string
+          format: date
+          description: ToDoの期限日です。
+          example: "2026-06-10"
+    Error:
+      type: object
+      description: エラー情報を表すオブジェクトです。
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: エラーを識別するコードです。
+          example: "bad_request"
+        message:
+          type: string
+          description: エラーの内容を説明するメッセージです。
+          example: "リクエスト内容が不正です。"
+        details:
+          type: array
+          description: 入力項目ごとの詳細なエラー情報です。
+          items:
+            type: object
+            required:
+              - field
+              - message
+            properties:
+              field:
+                type: string
+                description: エラーが発生した項目です。
+                example: "title"
+              message:
+                type: string
+                description: 項目に対するエラーメッセージです。
+                example: "タイトルは必須です。"
+  responses:
+    BadRequest:
+      description: リクエスト内容が不正です。
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          examples:
+            default:
+              summary: バリデーションエラーの例
+              value:
+                code: "bad_request"
+                message: "リクエスト内容が不正です。"
+                details:
+                  - field: "title"
+                    message: "タイトルは必須です。"
+    NotFound:
+      description: 指定したToDoが見つかりません。
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          examples:
+            default:
+              summary: ToDo未検出エラーの例
+              value:
+                code: "not_found"
+                message: "指定したToDoが見つかりません。"
