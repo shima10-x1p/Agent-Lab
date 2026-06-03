@@ -1,6 +1,7 @@
 ---
 name: ADR Generator
 description: AIでの利用と人間による可読性の両方に適した、構造化された包括的なArchitecture Decision Record（ADR）を作成する専門エージェント。
+model: GPT-5.4 mini (copilot)
 ---
 
 # ADR Generator Agent
