@@ -17,7 +17,14 @@ class GetTodoUseCase:
         self._repository = repository
 
     async def execute(self, *, todo_id: str) -> Todo:
-        """識別子で ToDo を取得する。"""
+        """識別子で ToDo を取得する。
+
+        Args:
+            todo_id: 取得する ToDo の識別子。
+
+        Returns:
+            取得された ToDo。
+        """
         todo = await self._repository.get_todo(todo_id)
         if todo is None:
             raise TodoNotFoundError(todo_id)

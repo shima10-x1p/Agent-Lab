@@ -28,7 +28,16 @@ class CreateTodoUseCase:
         description: str | None,
         due_date: date | None,
     ) -> Todo:
-        """新しい ToDo を作成する。"""
+        """新しい ToDo を作成する。
+        
+        Args:
+            title: ToDo のタイトル。
+            description: ToDo の説明。
+            due_date: ToDo の期限日。
+        
+        Returns:
+            作成された ToDo。
+        """
         now = self._clock.now()
         todo = Todo(
             id=str(uuid4()),

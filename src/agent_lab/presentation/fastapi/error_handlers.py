@@ -21,6 +21,15 @@ def register_handlers(app: FastAPI) -> None:
         request: Request,
         exc: RequestValidationError,
     ) -> JSONResponse:
+        """入力値エラーを 400 応答へ変換する。
+
+        Args:
+            request: 失敗したリクエスト。
+            exc: FastAPI が検出した入力検証エラー。
+
+        Returns:
+            検証エラーの詳細を含む JSON 応答。
+        """
         del request
         payload = Error(
             code="bad_request",
@@ -43,6 +52,15 @@ def register_handlers(app: FastAPI) -> None:
         request: Request,
         exc: TodoNotFoundError,
     ) -> JSONResponse:
+        """存在しない ToDo へのアクセスを 404 応答へ変換する。
+
+        Args:
+            request: 失敗したリクエスト。
+            exc: 見つからなかった ToDo に関する例外。
+
+        Returns:
+            ToDo が見つからないことを示す JSON 応答。
+        """
         del request
         payload = Error(code="not_found", message=str(exc))
         return JSONResponse(
@@ -55,6 +73,15 @@ def register_handlers(app: FastAPI) -> None:
         request: Request,
         exc: Exception,
     ) -> JSONResponse:
+        """想定外の例外を 500 応答へ変換する。
+
+        Args:
+            request: 失敗したリクエスト。
+            exc: 予期しない例外。
+
+        Returns:
+            内部エラーを表す JSON 応答。
+        """
         logger.exception(
             "Unhandled error on %s %s",
             request.method,
@@ -72,7 +99,14 @@ def register_handlers(app: FastAPI) -> None:
 
 
 def _format_field_name(location: tuple[Any, ...]) -> str:
-    """FastAPI の location 情報を項目名へ変換する。"""
+    """FastAPI の location 情報を項目名へ変換する。
+
+    Args:
+        location: FastAPI のエラー位置情報。
+
+    Returns:
+        入力項目名。該当項目がない場合は `request` を返す。
+    """
     parts = [str(part) for part in location if part not in {"body", "query", "path"}]
     if not parts:
         return "request"

@@ -21,12 +21,27 @@ _DESCRIPTION = (
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
-    """FastAPI アプリケーションを生成する。"""
+    """FastAPI アプリケーションを生成する。
+
+    Args:
+        settings: 起動時に使うアプリケーション設定。
+
+    Returns:
+        構成済みの FastAPI アプリケーション。
+    """
     active_settings = settings or Settings()
     container = build_container(active_settings)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        """アプリケーションの起動と終了に伴うリソースを管理する。
+
+        Args:
+            app: 起動中の FastAPI アプリケーション。
+
+        Yields:
+            アプリケーション稼働中の制御を返す。
+        """
         app.state.container = container
         await initialize_container(container)
         try:

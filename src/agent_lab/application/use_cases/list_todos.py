@@ -34,7 +34,17 @@ class ListTodosUseCase:
         limit: int,
         offset: int,
     ) -> ListTodosResult:
-        """ToDo 一覧を取得する。"""
+        """ToDo 一覧を取得する。
+        
+        Args:
+            completed: 完了状態で絞り込む場合は `True`
+                または `False`、絞り込まない場合は `None`。
+            limit: 取得件数の上限。
+            offset: 取得開始位置のオフセット。
+
+        Returns:
+            ToDo 一覧の結果。
+        """
         page = await self._repository.list_todos(
             completed=completed,
             limit=limit,

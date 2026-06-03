@@ -16,7 +16,11 @@ class DeleteTodoUseCase:
         self._repository = repository
 
     async def execute(self, *, todo_id: str) -> None:
-        """識別子で ToDo を削除する。"""
+        """識別子で ToDo を削除する。
+        
+        Args:
+            todo_id: 削除する ToDo の識別子。
+        """
         deleted = await self._repository.delete_todo(todo_id)
         if not deleted:
             raise TodoNotFoundError(todo_id)

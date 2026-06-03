@@ -30,7 +30,18 @@ class UpdateTodoUseCase:
         completed: bool,
         due_date: date | None,
     ) -> Todo:
-        """ToDo を全体置換で更新する。"""
+        """ToDo を全体置換で更新する。
+        
+        Args:
+            todo_id: 更新する ToDo の識別子。
+            title: ToDo のタイトル。
+            description: ToDo の説明。
+            completed: ToDo の完了状態。
+            due_date: ToDo の期限日。
+        
+        Returns:
+            更新された ToDo。
+        """
         current = await self._repository.get_todo(todo_id)
         if current is None:
             raise TodoNotFoundError(todo_id)

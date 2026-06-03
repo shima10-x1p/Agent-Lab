@@ -25,7 +25,14 @@ class Container:
 
 
 def build_container(settings: Settings | None = None) -> Container:
-    """依存関係を束ねたコンテナを構築する。"""
+    """依存関係を束ねたコンテナを構築する。
+    
+    Args:
+        settings: 起動時に使うアプリケーション設定。指定しない場合はデフォルト設定。
+    
+    Returns:
+        構成されたコンテナ。
+    """
     active_settings = settings or Settings()
     engine, session_factory = create_engine_and_session_factory(
         active_settings.database_url,
@@ -39,11 +46,19 @@ def build_container(settings: Settings | None = None) -> Container:
 
 
 async def initialize_container(container: Container) -> None:
-    """コンテナ初期化時に必要なセットアップを行う。"""
+    """コンテナ初期化時に必要なセットアップを行う。
+    
+    Args:
+        container: 初期化するコンテナ。
+    """
     if container.settings.auto_create_schema:
         await create_schema(container.engine)
 
 
 async def shutdown_container(container: Container) -> None:
-    """コンテナが保持するリソースを解放する。"""
+    """コンテナが保持するリソースを解放する。
+    
+    Args:
+        container: 解放するコンテナ。
+    """
     await dispose_engine(container.engine)
