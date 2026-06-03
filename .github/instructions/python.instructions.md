@@ -21,10 +21,13 @@ applyTo: '**/*.py'
 
 ## Docstrings <MUST>
 
-- Write docstrings for public modules, classes, functions, and methods.
+- Write docstrings for modules, classes, functions, and methods.
 - Use Google Style docstrings.
 - Keep docstrings concise. Explain what the object does, its arguments, return value, raised exceptions, and important side effects.
 - Do not write docstrings that merely repeat the function name or obvious type hints.
+- Always write a docstring for every class and function, even private ones.
+- Please refer to the following sample for function docstrings.
+- Please write the docstring in Japanese.
 
 Example:
 

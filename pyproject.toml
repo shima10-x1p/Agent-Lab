@@ -1,7 +1,44 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "agent-lab"
 version = "0.1.0"
-description = "Add your description here"
+description = "FastAPI ヘキサゴナル構成の ToDo API マイクロサービス"
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+	"aiosqlite>=0.21.0",
+	"alembic>=1.16.0",
+	"fastapi>=0.116.0",
+	"greenlet>=3.5.1",
+	"pydantic-settings>=2.10.0",
+	"sqlalchemy>=2.0.41",
+	"uvicorn[standard]>=0.35.0",
+]
+
+[project.optional-dependencies]
+dev = [
+	"httpx>=0.28.0",
+	"pytest>=8.4.0",
+	"ruff>=0.12.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agent_lab"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
